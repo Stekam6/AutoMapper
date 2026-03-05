@@ -16,7 +16,7 @@ This is the main repository for AutoMapper, but there's more:
 * [EF6 Extensions](https://github.com/AutoMapper/AutoMapper.EF6)
 * [IDataReader/Record Extensions](https://github.com/AutoMapper/AutoMapper.Data)
 * [Enum Extensions](https://github.com/AutoMapper/AutoMapper.Extensions.EnumMapping)
-
+  
 ### How do I get started?
 
 First, configure AutoMapper to know what types you want to map, in the startup of your application:
