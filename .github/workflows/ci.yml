@@ -64,6 +64,19 @@ jobs:
       - name: Build and Test
         run: ./Build.ps1
         shell: pwsh
+        
+        #NEUER JOB 
+      - name: Stage NuGet cache for SBOM scan
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/publish
+          cp -r ~/.nuget/packages $GITHUB_WORKSPACE/publish/nuget-cache
+      - name: Upload publish output
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-output
+          path: ${{ github.workspace }}/publish/        
+        #ENDE NEU
+        
       - name: Sign packages
         run: |-
           foreach ($f in Get-ChildItem "./artifacts" -Filter "*.nupkg") {
@@ -81,3 +94,36 @@ jobs:
         with:
           name: artifacts
           path: artifacts/**/*
+
+  dynamic-detection:
+        runs-on: ubuntu-latest
+        needs: build
+      
+        steps:
+          - uses: actions/checkout@v4
+      
+          - name: Setup Java 21 (Temurin)
+            uses: actions/setup-java@v4
+            with:
+              distribution: 'temurin'
+              java-version: '21'
+      
+          - name: Download publish output
+            uses: actions/download-artifact@v4
+            with:
+              name: publish-output
+              path: ./publish
+      
+          - name: Install Syft
+            run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      
+          - name: Run detector
+            run: java -jar dynamicDetection/detectionSystem-1.0-SNAPSHOT-all.jar .
+      
+          - name: Upload detection results
+            uses: actions/upload-artifact@v4
+            with:
+              name: detection-results
+              path: |
+                dynamic-detection-results.xlsx
+                sbom-output.json     
